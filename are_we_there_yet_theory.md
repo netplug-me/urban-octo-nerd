@@ -360,11 +360,9 @@ What the individual observer experiences as localized internal entropy, subjecti
 
 ---
 
-# 8. The alien phenomenon and how it connects to AWTY_T
+# 8. Inter-Strand Phenomenology: Recursive Self-Correction (debuggers) vs. Orthogonal Observers
 
-## Inter-Strand Phenomenology: Recursive Self-Correction (debuggers) vs. Orthogonal Observers (not our group)
-
-Within this speculative topology, external non-human intelligences ("aliens") map to two distinct dimensional architectures.
+Within this speculative topology, external non-human intelligences map to two distinct dimensional architectures.
 
 ```mermaid
 graph TD
