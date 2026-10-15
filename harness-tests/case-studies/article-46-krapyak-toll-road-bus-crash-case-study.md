@@ -148,6 +148,8 @@ but the casualty trinity "15 dead / 19 safe / 17 injured" is wrong on two counts
 the final death toll is one short. The quotes section should be replaced with sourced
 statements (Budiono's statements are quotable; the CEO-suspect news is documented).
 
+**Update 2026-10-15:** the article was rewritten in place per user request — final tally 16 dead / 19 injured, the fabricated "19 safe" section removed (every passenger accounted for as dead or injured per the initial tally), "17 injured" corrected to 19, and the three constructed quotes replaced with sourced material (Budiono via ANTARA, Kompas headline). Every row above is now reflected in the article.
+
 ---
 
 ## Sources

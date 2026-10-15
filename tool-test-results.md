@@ -47,4 +47,4 @@ Live sources (Antara, Xinhua, CNN Indonesia, Detik, Kompas, Tempo, PBS):
 
 `article-46` errors: "19 safe / 17 injured" not supported (early tally was 15 dead /
 19 injured); final death toll is 16, not 15; three quote blocks are invented
-attributions (same pattern as pre-fix article-50). Article left untouched pending user decision.
+attributions (same pattern as pre-fix article-50). **FIXED 2026-10-15:** article rewritten in place — final tally **16 dead / 19 injured**; fabricated "19 safe" section removed (every passenger accounted for as dead or injured per the initial tally); "17 injured" corrected to 19; quotes replaced with real sourced material (Budiono via ANTARA x2, Kompas headline); timeline aligned to verified times (~12:30 a.m. crash, evacuation concluded 4:00 a.m., 16th death at hospital).
