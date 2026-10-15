@@ -392,67 +392,19 @@ Mechanism: The entities are downstream or higher-bandwidth recursive strands loo
 U⊂M.
 
 Function: Mitigating timeline bifurcation and runaway entropic decoherence by subtly perturbing quantum transition probabilities 
-W(ϕ 
-A
-​
- →ϕ 
-B
-​
- )=∫Dϕe 
-iS 
-eff
-​
- /ℏ
- .
+W(ϕ A →ϕ B )=∫Dϕe iS eff /ℏ .
 
-Inertial Nullification: Observed non-inertial flight dynamics (instantaneous acceleration, sharp 90-degree turns) represent focal aperture steering across the 3D sheet (
-dx 
-contact
-​
- /dt) rather than physical propulsion subject to 
-F=ma.
+Inertial Nullification: Observed non-inertial flight dynamics (instantaneous acceleration, sharp 90-degree turns) represent focal aperture steering across the 3D sheet 
+(dx contact /dt) rather than physical propulsion subject to F=ma.
 
 8.2 Model B: Orthogonal Bundle Observers (Foreign Bulk Field)
 Topology: Multiple distinct total spaces 
-(E 
-1
-​
- ,M,π 
-1
-​
- ,F 
-1
-​
- ) and 
-(E 
-2
-​
- ,M,π 
-2
-​
- ,F 
-2
-​
- ) project onto the same physical base manifold 
-(M,g 
-μν
-​
- ).
+(E 1,M,π  ,F 1 ) and (E 2,M,π 2,F 2) project onto the same physical base manifold 
+(M,g μν).
 
 Mechanism: The entities possess an entirely disjoint internal Hilbert space:
 
-H 
-F 
-1
-​
- 
-​
- ⊥H 
-F 
-2
-​
- 
-​
+H F 1 ⊥ H F 2
  
 Interaction: Direct conscious or telepathic resonance is impossible without artificial translation operators. Mutual observation is restricted strictly to physical footprints and classical sensory interactions on 
 M.
