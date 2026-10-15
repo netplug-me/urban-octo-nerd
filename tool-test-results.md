@@ -31,4 +31,20 @@ Sources: elkem.com media release (Dec 22, 2025), euronews.com (Dec 23, 2025), jo
 
 ## Next step
 
-Expand `article-46-krapyak-toll-road-bus-crash.md` into a longer case study (per user's choice in the `question` test).
+**COMPLETED 2026-10-15** — full case study written at
+`harness-tests/case-studies/article-46-krapyak-toll-road-bus-crash-case-study.md`
+(prose format, 9 sections incl. a sourced fact-check table; original article preserved).
+
+## Krapyak Bus Crash — Fact-Check (2026-10-15)
+
+Live sources (Antara, Xinhua, CNN Indonesia, Detik, Kompas, Tempo, PBS):
+- Crash ≈ 12:30 a.m. Mon Dec 22, 2025, Krapyak toll exit, Semarang; PO Cahaya Trans
+  (plate B 7201 IV), Jatiasih→Yogyakarta, ~34 passengers; speeding → lost traction →
+  struck concrete divider → rolled over. Evacuation (SAR/police/Jasa Marga/Red Cross)
+  ended ≈ 4:00 a.m.; hospitals: Dr. Kariadi, Columbia Asia, Dr. Adhyatma.
+- **Initial: 15 dead / 19 injured. Final: 16 dead** (one injured died in hospital).
+- CEO of the operating company named a suspect (Kompas); victims' names published.
+
+`article-46` errors: "19 safe / 17 injured" not supported (early tally was 15 dead /
+19 injured); final death toll is 16, not 15; three quote blocks are invented
+attributions (same pattern as pre-fix article-50). Article left untouched pending user decision.
