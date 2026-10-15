@@ -459,26 +459,10 @@ M.
 
 8.3 Architectural Comparison
 Dimension / Metric	Model A: Recursive Self-Correction	Model B: Orthogonal Foreign Observer
-Total Space Topology	Shared Manifold E	Disjoint Manifolds (E 
-1
-​
- ∩E 
-2
-​
- =∅)
+Total Space Topology	Shared Manifold E	Disjoint Manifolds (E 1 ∩E 2 =∅)
 Base Projection	Single surjective map π:E→M	Dual projections π 
-1
-​
- (E 
-1
-​
- ),π 
-2
-​
- (E 
-2
-​
- )→M
+1(E 1),π 2(E 2)→M
+
 Hilbert State Space	Single unified vacuum $	0\rangle_E$
 Observation Type	Recursive systemic feedback / branch pruning	External empirical surveying of substrate M
 Apparent Manifestation	Focal aperture modulation (g(t) shifts)	Advanced engineering / physical anchoring
