@@ -385,7 +385,7 @@ graph TD
     end
 ```
 
-8.1 Model A: Recursive Self-Correction (The "Debugger" Paradigm)
+### 8.1 Model A: Recursive Self-Correction (The "Debugger" Paradigm)
 Topology: Humanity and the anomalous entities share the identical bulk manifold 
 E.
 
@@ -398,7 +398,7 @@ W(ϕ A →ϕ B )=∫Dϕe iS eff /ℏ .
 Inertial Nullification: Observed non-inertial flight dynamics (instantaneous acceleration, sharp 90-degree turns) represent focal aperture steering across the 3D sheet 
 (dx contact /dt) rather than physical propulsion subject to F=ma.
 
-8.2 Model B: Orthogonal Bundle Observers (Foreign Bulk Field)
+### 8.2 Model B: Orthogonal Bundle Observers (Foreign Bulk Field)
 Topology: Multiple distinct total spaces 
 (E 1,M,π  ,F 1 ) and (E 2,M,π 2,F 2) project onto the same physical base manifold 
 (M,g μν).
@@ -410,7 +410,7 @@ H F 1 ⊥ H F 2
 Interaction: Direct conscious or telepathic resonance is impossible without artificial translation operators. Mutual observation is restricted strictly to physical footprints and classical sensory interactions on 
 M.
 
-8.3 Architectural Comparison
+### 8.3 Architectural Comparison
 Dimension / Metric	Model A: Recursive Self-Correction	Model B: Orthogonal Foreign Observer
 Total Space Topology	Shared Manifold E	Disjoint Manifolds (E 1 ∩E 2 =∅)
 Base Projection	Single surjective map π:E→M	Dual projections π 
