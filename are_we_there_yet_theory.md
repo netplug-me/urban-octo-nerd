@@ -213,7 +213,88 @@ mindmap
 
 ---
 
-## 6. Falsification Criteria & Experimental Directions
+---
+
+## 6. Black Hole Horizon Decoupling and Bulk Geodesic Survival
+
+### 6.1 Metric Geometry and Boundary Singularities
+
+Let the physical base manifold $M$ be parameterized by the Schwarzschild exterior metric in standard coordinates $x^\mu = (t, r, \theta, \phi)$:
+
+$$ds_M^2 = -\left(1 - \frac{r_s}{r}\right) c^2 dt^2 + \left(1 - \frac{r_s}{r}\right)^{-1} dr^2 + r^2 d\Omega^2$$
+
+where $r_s = \frac{2GM}{c^2}$ denotes the Schwarzschild radius.
+
+In the extended $(4+n)$-dimensional total space $E$, the metric $\mathcal{G}_{AB}$ ($A, B \in \{0, 1, \dots, 3+n\}$) incorporates the compact or warped extra dimensions $w^a$ ($a \in \{1, \dots, n\}$):
+
+$$ds_E^2 = g_{\mu\nu}(x) dx^\mu dx^\nu + e^{2\Phi(x)} \gamma_{ab}(w) dw^a dw^b$$
+
+where $\Phi(x)$ is the warp/radion scalar field governing the coupling cross-section between the bulk consciousness field and $M$.
+
+---
+
+### 6.2 Biological Transceiver Extinction ($r \to r_s^+$ and $r \to 0$)
+
+The localized section $\sigma(x): U \subset M \to E$ relies on biological dipole coherence within neocortical pyramidal columns, expressed by the boundary interaction Hamiltonian:
+
+$$H_{\text{int}} = g \int_{\Omega} d^3x \sqrt{-g^{(3)}} \left[ \Psi(x, w_0) \cdot \mathcal{J}_{\text{neural}}(x) \right]$$
+
+As the physical transceiver approaches $r \to r_s^+$:
+
+1. **Gravitational Redshift and Bandwidth Attenuation:**  
+   The proper oscillation frequency $\omega_{\text{local}}$ observed at asymptotic infinity $\omega_\infty$ red-shifts to zero:
+   $$\omega_\infty = \omega_{\text{local}} \sqrt{1 - \frac{r_s}{r}} \implies \lim_{r \to r_s^+} \omega_\infty = 0$$
+   The biological bandwidth falls out of the phase-matching condition ($\Delta k = 0$), causing total impedance divergence:
+   $$\lim_{r \to r_s^+} Z_{\text{bio}}(r) \to \infty \implies T(\omega) = \frac{4 Z_0 Z_{\text{bio}}}{(Z_0 + Z_{\text{bio}})^2} \to 0$$
+
+2. **Tidal Destruction ($r \to 0$):**  
+   The Riemann curvature invariant (Kretschmann scalar) diverges at the physical core:
+   $$K = R^{\alpha\beta\gamma\delta} R_{\alpha\beta\gamma\delta} = \frac{48 G^2 M^2}{c^4 r^6} \xrightarrow{r \to 0} \infty$$
+   The physical boundary $\partial\Omega$ is disrupted by infinite differential tidal stresses, setting $\mathcal{J}_{\text{neural}} \equiv 0$. The local physical section $\sigma(x)$ terminates irreversibly.
+
+---
+
+### 6.3 Bulk Geodesic Invariance and Topological Survival
+
+While the projection footprint on $M$ terminates, the higher-dimensional wavepacket $\Psi(X)$ propagates along bulk geodesics parameterized by affine parameter $\lambda$:
+
+$$\frac{d^2 X^A}{d\lambda^2} + \Gamma^A_{BC} \frac{dX^B}{d\lambda} \frac{dX^C}{d\lambda} = 0$$
+
+For the extra-dimensional components $X^a = w^a$:
+
+$$\frac{d^2 w^a}{d\lambda^2} + \Gamma^a_{bc} \frac{dw^b}{d\lambda} \frac{dw^c}{d\lambda} + 2 \partial_\mu \Phi \frac{dx^\mu}{d\lambda} \frac{dw^a}{d\lambda} = 0$$
+
+* **Codimension Immunity:** The singularity $r = 0$ is strictly a submanifold defect of $M$, localized at $\pi^{-1}(\{r=0\})$. It does not span the complete fiber $F_x$.
+* **Fiber Decoupling:** The composite density matrix $\rho_{\text{total}} \in \mathcal{H}_E$ is related to the localized observer by the partial trace over unobserved bulk degrees of freedom:
+  $$\rho_{\text{local}} = \text{Tr}_{\text{bulk}}(\rho_{\text{total}})$$
+  When the boundary aperture vanishes ($T(\omega) \to 0$), the trace operation collapses:
+  $$\rho_{\text{local}} \to 0 \quad \text{while} \quad \text{Tr}_E(\rho_{\text{total}}^2) = 1 \quad (\forall \lambda)$$
+  Unitarity in the total space $E$ is strictly preserved.
+
+---
+
+### 6.4 Horizon Transmission Sequence
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Bulk as 4D+ Bulk Field (Total Space E)
+    participant Bio as 3D Transceiver (Brain / Manifold M)
+    participant Horizon as Event Horizon (r = r_s)
+    participant Singularity as Metric Core (r = 0)
+
+    Bulk->>Bio: Continuous Fractal Coherence (g · Ψ)
+    Note over Bio: Normal State: Coherent Ego Stream (40 Hz Gamma)
+    Bio->>Horizon: Orbital Decay toward Horizon (r → r_s)
+    Note over Bio,Horizon: Redshift Divergence: Z_bio → ∞, T(ω) → 0
+    Horizon-->>Bio: Horizon Scrambling / Aperture Pinched
+    Bio-xBulk: Local Section σ(x) Severed
+    Bio->>Singularity: Physical Spaghettification & Metric Crash
+    Note over Singularity: Physical Hardware Destroyed (K → ∞)
+    Note over Bulk: Bulk Wave Continues Unperturbed Along w^a Geodesics
+```
+
+## 7. Falsification Criteria & Experimental Directions
 
 To test the AWTY-T against standard computational-emergence models:
 
