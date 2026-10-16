@@ -221,6 +221,52 @@ sequenceDiagram
 ## 7. Context Compaction Flow
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Fira Code, monospace', 'fontSize': '13px', 'darkMode': true, 'background': '#0f172a'}}}%%
+flowchart TB
+    %% Class Definitions
+    classDef detection fill:#1e293b,stroke:#38bdf8,stroke-width:2px,color:#f8fafc,rx:6px,ry:6px;
+    classDef process fill:#312e81,stroke:#818cf8,stroke-width:2px,color:#f5f3ff,rx:6px,ry:6px;
+    classDef method fill:#064e3b,stroke:#34d399,stroke-width:2px,color:#ecfdf5,rx:6px,ry:6px;
+    classDef storage fill:#701a75,stroke:#f472b6,stroke-width:2px,color:#fdf2f8,rx:4px,ry:4px;
+    classDef subStyle fill:#090d16,stroke:#334155,stroke-width:1.5px,stroke-dasharray: 4 4,color:#94a3b8;
+
+    subgraph DETECTION[" 🔍 Detection Layer "]
+        direction TB
+        D1["Token Count vs Model Limit"]:::detection
+        D2["Turn Splitting Check"]:::detection
+    end
+
+    subgraph PROCESS[" ⚙️ Compaction Pipeline "]
+        direction TB
+        P1["Output Pruning"]:::process
+        P2["Compaction Markers"]:::process
+        P3["Durable Barrier"]:::process
+    end
+
+    subgraph METHODS[" 📦 Compaction Strategies "]
+        direction TB
+        M1["Local Summary<br/><i>(SessionCompaction)</i>"]:::method
+        M2["Native Provider Compaction"]:::method
+    end
+
+    subgraph PERSISTENCE[" 💾 State & Storage "]
+        DB[("fa:fa-database SQLite DB")]:::storage
+    end
+
+    %% Flow Traces
+    D1 --> P1 --> P3
+    D2 --> P2 --> P3
+
+    P3 ==>|Local Fallback| M1
+    P3 ==>|Provider API| M2
+
+    M1 & M2 -->|Persist Compressed Context| DB
+
+    %% Subgraph Styling
+    class DETECTION,PROCESS,METHODS,PERSISTENCE subStyle;
+```
+
+```mermaid
 graph TB
     subgraph "Detection"
         D1[Token count vs model limit]
