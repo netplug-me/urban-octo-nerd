@@ -57,50 +57,6 @@ flowchart TB
     class CLIENTS,CORE,MANAGERS,PERSISTENCE subStyle;
 ```
 
-```mermaid
-graph TB
-    subgraph Clients
-        TUI[Terminal UI]
-        CLI[Command Line]
-        Web[Web App]
-        SDK[TypeScript SDK]
-        ClientLib[@opencode/client]
-    end
-
-    subgraph "Background Service"
-        HttpApi[HTTP API<br/>98 operations]
-        SessionMgr[Session Manager]
-        LocationMgr[Location Manager]
-        PluginMgr[Plugin Manager]
-        PermMgr[Permissions Manager]
-        ModelMgr[Model Manager]
-        MCPManager[MCP Server Manager]
-    end
-
-    subgraph Storage
-        SQLite[(SQLite<br/>Session DB)]
-        Config[Config Files<br/>opencode.jsonc]
-        Logs[Log Files]
-    end
-
-    TUI --> HttpApi
-    CLI --> HttpApi
-    Web --> HttpApi
-    SDK --> HttpApi
-    ClientLib --> HttpApi
-
-    HttpApi --> SessionMgr
-    HttpApi --> LocationMgr
-    HttpApi --> PluginMgr
-    HttpApi --> PermMgr
-    HttpApi --> ModelMgr
-    HttpApi --> MCPManager
-
-    SessionMgr --> SQLite
-    PluginMgr --> Config
-    LocationMgr --> Config
-```
-
 ## 2. Session Execution Flow
 
 ```mermaid
