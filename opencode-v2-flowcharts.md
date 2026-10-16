@@ -2,6 +2,61 @@
 
 ## 1. System Architecture Overview
 
+```mermaid 
+%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Fira Code, monospace', 'fontSize': '13px', 'darkMode': true, 'background': '#0f172a'}}}%%
+flowchart TB
+    %% Styling Definitions
+    classDef client fill:#1e1b4b,stroke:#818cf8,stroke-width:2px,color:#e0e7ff,rx:8px,ry:8px;
+    classDef gateway fill:#312e81,stroke:#a78bfa,stroke-width:3px,color:#f5f3ff,rx:10px,ry:10px;
+    classDef service fill:#064e3b,stroke:#34d399,stroke-width:2px,color:#ecfdf5,rx:6px,ry:6px;
+    classDef storage fill:#701a75,stroke:#f472b6,stroke-width:2px,color:#fdf2f8,rx:4px,ry:4px;
+    classDef subStyle fill:#090d16,stroke:#334155,stroke-width:1.5px,stroke-dasharray: 4 4,color:#94a3b8;
+
+    subgraph CLIENTS[" 💻 Client Layer "]
+        direction LR
+        TUI["fa:fa-terminal Terminal UI"]:::client
+        CLI["fa:fa-square-terminal Command Line"]:::client
+        Web["fa:fa-globe Web App"]:::client
+        SDK["fa:fa-code TypeScript SDK"]:::client
+        ClientLib["fa:fa-box-open @opencode/client"]:::client
+    end
+
+    subgraph CORE[" ⚡ Background Service Core "]
+        HttpApi["fa:fa-network-wired <b>HTTP API Gateway</b><br/><i>[ 98 endpoints ]</i>"]:::gateway
+
+        subgraph MANAGERS[" 🧩 Orchestration Engines "]
+            direction TB
+            SessionMgr["fa:fa-user-clock Session Manager"]:::service
+            LocationMgr["fa:fa-compass Location Manager"]:::service
+            PluginMgr["fa:fa-puzzle-piece Plugin Manager"]:::service
+            PermMgr["fa:fa-shield-halved Permissions Manager"]:::service
+            ModelMgr["fa:fa-brain Model Manager"]:::service
+            MCPManager["fa:fa-server MCP Server Manager"]:::service
+        end
+    end
+
+    subgraph PERSISTENCE[" 💾 Persistence & State "]
+        direction TB
+        SQLite[("fa:fa-database SQLite DB<br/><i>(Active Sessions)</i>")]:::storage
+        Config["fa:fa-file-code Config Storage<br/><i>(opencode.jsonc)</i>"]:::storage
+        Logs["fa:fa-file-lines Audit & Logs"]:::storage
+    end
+
+    %% Client -> API Gateway Ingress
+    TUI & CLI & Web & SDK & ClientLib ==>|JSON-RPC / HTTP| HttpApi
+
+    %% Gateway -> Internal Dispatch
+    HttpApi --> SessionMgr & LocationMgr & PluginMgr & PermMgr & ModelMgr & MCPManager
+
+    %% Service -> Storage Egress
+    SessionMgr -->|RW State| SQLite
+    PluginMgr & LocationMgr -->|Sync Config| Config
+    HttpApi -.->|Telemetry| Logs
+
+    %% Subgraph Classes
+    class CLIENTS,CORE,MANAGERS,PERSISTENCE subStyle;
+```
+
 ```mermaid
 graph TB
     subgraph Clients
