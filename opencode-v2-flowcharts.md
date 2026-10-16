@@ -266,34 +266,6 @@ flowchart TB
     class DETECTION,PROCESS,METHODS,PERSISTENCE subStyle;
 ```
 
-```mermaid
-graph TB
-    subgraph "Detection"
-        D1[Token count vs model limit]
-        D2[Turn splitting check]
-    end
-
-    subgraph "Compaction Process"
-        P1[Output pruning]
-        P2[Compaction markers]
-        P3[Durable barrier]
-    end
-
-    subgraph "Compaction Methods"
-        M1[Local summary<br/>(SessionCompaction)]
-        M2[Native provider compaction]
-    end
-
-    D1 --> P1 --> P3 --> M1
-    D2 --> P2 --> P3 --> M1
-    P3 --> M2
-
-    M1 --> DB[(SQLite)]
-    M2 --> DB
-
-    style DB fill:#ccf,stroke:#333
-```
-
 ## 8. Instruction Resolution Order
 
 ```mermaid
