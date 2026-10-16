@@ -2,10 +2,9 @@
 
 ## 1. System Architecture Overview
 
-```mermaid 
+```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Fira Code, monospace', 'fontSize': '13px', 'darkMode': true, 'background': '#0f172a'}}}%%
 flowchart TB
-    %% Styling Definitions
     classDef client fill:#1e1b4b,stroke:#818cf8,stroke-width:2px,color:#e0e7ff,rx:8px,ry:8px;
     classDef gateway fill:#312e81,stroke:#a78bfa,stroke-width:3px,color:#f5f3ff,rx:10px,ry:10px;
     classDef service fill:#064e3b,stroke:#34d399,stroke-width:2px,color:#ecfdf5,rx:6px,ry:6px;
@@ -42,188 +41,227 @@ flowchart TB
         Logs["fa:fa-file-lines Audit & Logs"]:::storage
     end
 
-    %% Client -> API Gateway Ingress
+    %% Ingress & Routing
     TUI & CLI & Web & SDK & ClientLib ==>|JSON-RPC / HTTP| HttpApi
-
-    %% Gateway -> Internal Dispatch
     HttpApi --> SessionMgr & LocationMgr & PluginMgr & PermMgr & ModelMgr & MCPManager
 
-    %% Service -> Storage Egress
+    %% Egress
     SessionMgr -->|RW State| SQLite
     PluginMgr & LocationMgr -->|Sync Config| Config
     HttpApi -.->|Telemetry| Logs
 
-    %% Subgraph Classes
     class CLIENTS,CORE,MANAGERS,PERSISTENCE subStyle;
-```
 
-## 2. Session Execution Flow
 
-```mermaid
+2. Session Execution Flow
+
+
+
+Code snippet
+%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Fira Code, monospace', 'fontSize': '12px', 'darkMode': true, 'actorBkg': '#1e1b4b', 'actorBorder': '#818cf8', 'actorTextColor': '#e0e7ff', 'signalColor': '#94a3b8', 'signalTextColor': '#cbd5e1', 'noteBkgColor': '#1e293b', 'noteTextColor': '#38bdf8', 'noteBorderColor': '#0284c7'}}}%%
 sequenceDiagram
-    participant U as User
-    participant C as Client (TUI/CLI)
-    participant S as Session Runner
-    participant P as Plugin Manager
-    participant M as Model/Provider
-    participant L as LLM Client
-    participant T as Tools
-    participant DB as SQLite
+    autonumber
+    actor U as 👤 User
+    participant C as 💻 Client (TUI/CLI)
+    participant S as ⚡ Session Runner
+    participant P as 🔌 Plugin Manager
+    participant M as 🧠 Model Resolver
+    participant L as 🌐 LLM Client
+    participant T as 🛠️ Tools
+    participant DB as 💾 SQLite DB
 
-    U->>C: Send prompt
+    U->>C: Submit prompt
     C->>S: prompt(sessionID, message)
-    S->>S: session.hook('prompt')
-    S->>P: Apply transforms
-    S->>M: Resolve model/catalog
-    S->>S: Build context<br/>(system + AGENTS.md + skills + MCP)
-    S->>L: stream(request)
-    L-->>S: Token stream (tool calls + text)
-    S->>S: Detect tool call
-    S->>T: Execute tool
-    T-->>S: Tool result
-    S->>S: session.hook('generate')
-    S->>DB: Project to SQLite
-    S->>L: Continue stream<br/>(next turn)
-    L-->>S: Next tokens
-    Note over S,L: Loop until model stops
+    critical Context Preparation
+        S->>S: session.hook('prompt')
+        S->>P: Apply transform pipeline
+        S->>M: Resolve model catalog & config
+        S->>S: Assemble context (System + AGENTS.md + Skills + MCP)
+    end
+
+    S->>+L: stream(request)
+    loop Generation & Tool Invocation
+        L-->>S: Token stream (tool calls + text)
+        alt Tool Call Triggered
+            S->>T: Execute tool call
+            T-->>S: Return tool execution result
+            S->>S: session.hook('generate')
+            S->>DB: Project partial state to SQLite
+            S->>L: Continue stream with tool context
+        end
+    end
+    L-->>-S: Final completion signal
+
     S->>DB: Final projection + compaction
-    S-->>C: Final response
-    C-->>U: Display output
-```
+    S-->>C: Complete response payload
+    C-->>U: Render formatted output
 
-## 3. Plugin Transform & Hook Pipeline
 
-```mermaid
-graph TB
-    subgraph "Transforms (Ordered, Synchronous)"
-        T1[provider.transform]
-        T2[model.transform]
-        T3[agent.transform]
-        T4[tool.transform]
-        T5[command.transform]
-        T6[skill.transform]
-        T7[mcp.transform]
-        T8[reference.transform]
-        T9[worktree.transform]
-        T10[websearch.transform]
-        T11[permission.rules]
-        T12[integration.transform]
-        T13[vcs.transform]
-        T14[plugin.list]
+3. Plugin Transform & Hook Pipeline
+
+
+
+Code snippet
+%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Fira Code, monospace', 'fontSize': '12px', 'darkMode': true, 'background': '#0f172a'}}}%%
+flowchart TB
+    classDef source fill:#1e1b4b,stroke:#818cf8,stroke-width:2px,color:#e0e7ff,rx:6px,ry:6px;
+    classDef transform fill:#064e3b,stroke:#34d399,stroke-width:1.5px,color:#ecfdf5,rx:4px,ry:4px;
+    classDef hook fill:#701a75,stroke:#f472b6,stroke-width:1.5px,color:#fdf2f8,rx:4px,ry:4px;
+    classDef subStyle fill:#090d16,stroke:#334155,stroke-width:1.5px,stroke-dasharray: 4 4,color:#94a3b8;
+
+    PluginDef["fa:fa-puzzle-piece <b>Plugin Definition</b><br/>(Core Specification)"]:::source
+
+    subgraph TRANSFORMS[" 🔄 Ordered Synchronous Transforms "]
+        direction TB
+        T1["1. provider.transform"]:::transform --> T2["2. model.transform"]:::transform
+        T2 --> T3["3. agent.transform"]:::transform --> T4["4. tool.transform"]:::transform
+        T4 --> T5["5. command.transform"]:::transform --> T6["6. skill.transform"]:::transform
+        T6 --> T7["7. mcp.transform"]:::transform --> T8["8. reference.transform"]:::transform
+        T8 --> T9["9. worktree.transform"]:::transform --> T10["10. websearch.transform"]:::transform
+        T10 --> T11["11. permission.rules"]:::transform --> T12["12. integration.transform"]:::transform
+        T12 --> T13["13. vcs.transform"]:::transform --> T14["14. plugin.list"]:::transform
     end
 
-    subgraph "Hooks (Live Operations)"
-        H1[prompt]
-        H2[context]
-        H3[compaction]
-        H4[generate]
-        H5[title]
-        H6[model.request]
-        H7[http.request]
-        H8[http.response]
-        H9[ws.handshake]
-        H10[retry]
+    subgraph HOOKS[" ⚡ Live Operational Hooks "]
+        direction TB
+        H1["fa:fa-terminal prompt"]:::hook
+        H2["fa:fa-book-open context"]:::hook
+        H3["fa:fa-compress compaction"]:::hook
+        H4["fa:fa-microchip generate"]:::hook
+        H5["fa:fa-tag title"]:::hook
+        H6["fa:fa-cloud model.request"]:::hook
+        H7["fa:fa-arrow-up-right-from-square http.request"]:::hook
+        H8["fa:fa-arrow-down-left-and-up-right-to-spread http.response"]:::hook
+        H9["fa:fa-handshake ws.handshake"]:::hook
+        H10["fa:fa-rotate-right retry"]:::hook
     end
 
-    PluginDef --> T1 --> T2 --> T3 --> T4 --> T5 --> T6 --> T7 --> T8 --> T9 --> T10 --> T11 --> T12 --> T13 --> T14
+    PluginDef ==>|Pipeline Initialization| T1
+    PluginDef ==>|Runtime Event Binding| HOOKS
 
-    PluginDef --> Hooks
-    Hooks --> H1 & H2 & H3 & H4 & H5 & H6 & H7 & H8 & H9 & H10
+    class TRANSFORMS,HOOKS subStyle;
 
-    style PluginDef fill:#f9f,stroke:#333
-    style Hooks fill:#ccf,stroke:#333
-```
 
-## 4. Permission Resolution Flow
+4. Permission Resolution Flow
 
-```mermaid
-graph TB
-    subgraph "Permission Rules (Last Match Wins)"
-        R1[Global Rules]
-        R2[Project Rules]
-        R3[Agent-Specific Rules]
-        R4[Saved Approvals]
-    end
 
-    subgraph "Policy Hard-Denies (After Rules)"
-        P1[Policy: deny]
-    end
 
-    subgraph "Default Base Policy"
-        D1[* → allow]
-        D2[external_directory → ask]
-        D3[*.env → ask]
-        D4[*.env.example → allow]
-    end
-
-    ToolCall --> R1 --> R2 --> R3 --> R4 --> P1
-
-    R1 -.-> D1 & D2 & D3 & D4
-    R2 -.-> D1 & D2 & D3 & D4
-    R3 -.-> D1 & D2 & D3 & D4
-
-    style ToolCall fill:#ff9,stroke:#333
-    style P1 fill:#f99,stroke:#333
-```
-
-## 5. Agent Types & Hierarchy
-
-```mermaid
-graph TB
-    subgraph "Primary Agents (user-facing)"
-        Build[Build Agent]
-        Plan[Plan Agent]
-    end
-
-    subgraph "Subagent Agents (spawned by build/plan)"
-        General[General<br/>Multi-step research/worker]
-        Explore[Explore<br/>Read-only file search]
-        Scout[Scout<br/>Quick file finder]
-    end
-
-    subgraph "Hidden Agents (system)"
-        Compaction[Compaction<br/>Context management]
-        Title[Title<br/>Session naming]
-        Summary[Summary<br/>Conversation summary]
-    end
-
-    Build --> General & Explore & Scout
-    Plan --> General & Explore & Scout
-
-    style Build fill:#9f9,stroke:#333
-    style Plan fill:#9f9,stroke:#333
-    style General fill:#9cf,stroke:#333
-    style Explore fill:#9cf,stroke:#333
-    style Scout fill:#9cf,stroke:#333
-    style Compaction fill:#ccc,stroke:#333
-    style Title fill:#ccc,stroke:#333
-    style Summary fill:#ccc,stroke:#333
-```
-
-## 6. Subagent Execution Model
-
-```mermaid
-sequenceDiagram
-    participant Parent as Parent Agent<br/>(Build/Plan)
-    participant SM as Session Manager
-    participant Child as Child Session
-    participant DB as SQLite
-
-    Parent->>SM: Launch subagent<br/>(agent, model, context)
-    SM->>SM: Create child session<br/>(parentID, agent, model)
-    SM->>Child: Initialize fresh context
-    Child->>DB: Record messages
-    Child->>Child: Execute tools independently
-    Child-->>Parent: Result (foreground) / notify (background)
-    Parent->>Parent: Continue main flow
-```
-
-## 7. Context Compaction Flow
-
-```mermaid
+Code snippet
 %%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Fira Code, monospace', 'fontSize': '13px', 'darkMode': true, 'background': '#0f172a'}}}%%
 flowchart TB
-    %% Class Definitions
+    classDef start fill:#1e1b4b,stroke:#818cf8,stroke-width:2px,color:#e0e7ff,rx:6px,ry:6px;
+    classDef rule fill:#064e3b,stroke:#34d399,stroke-width:2px,color:#ecfdf5,rx:4px,ry:4px;
+    classDef deny fill:#450a0a,stroke:#f87171,stroke-width:2px,color:#fef2f2,rx:4px,ry:4px;
+    classDef default fill:#1e293b,stroke:#94a3b8,stroke-width:1.5px,color:#f8fafc,rx:4px,ry:4px;
+    classDef subStyle fill:#090d16,stroke:#334155,stroke-width:1.5px,stroke-dasharray: 4 4,color:#94a3b8;
+
+    ToolCall["fa:fa-terminal <b>Tool Call Request</b>"]:::start
+
+    subgraph RULES[" 🛡️ Resolution Priority (Last Match Wins) "]
+        direction TB
+        R1["1. Global Rules"]:::rule
+        R2["2. Project Rules"]:::rule
+        R3["3. Agent-Specific Rules"]:::rule
+        R4["4. Saved User Approvals"]:::rule
+        R1 --> R2 --> R3 --> R4
+    end
+
+    subgraph POLICY[" 🚫 Enforcement Stage "]
+        P1["fa:fa-ban Hard Policy Denials"]:::deny
+    end
+
+    subgraph DEFAULTS[" ⚖️ Default Base Policy (Fallback) "]
+        direction TB
+        D1["* → allow"]:::default
+        D2["external_directory → ask"]:::default
+        D3["*.env → ask"]:::default
+        D4["*.env.example → allow"]:::default
+    end
+
+    ToolCall ==> RULES
+    R4 ==> POLICY
+    RULES -.->|Fallback if Unmatched| DEFAULTS
+
+    class RULES,POLICY,DEFAULTS subStyle;
+
+
+5. Agent Types & Hierarchy
+
+
+
+Code snippet
+%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Fira Code, monospace', 'fontSize': '13px', 'darkMode': true, 'background': '#0f172a'}}}%%
+flowchart TB
+    classDef primary fill:#1e1b4b,stroke:#818cf8,stroke-width:2px,color:#e0e7ff,rx:8px,ry:8px;
+    classDef subagent fill:#064e3b,stroke:#34d399,stroke-width:2px,color:#ecfdf5,rx:6px,ry:6px;
+    classDef system fill:#334155,stroke:#94a3b8,stroke-width:2px,color:#f8fafc,rx:6px,ry:6px;
+    classDef subStyle fill:#090d16,stroke:#334155,stroke-width:1.5px,stroke-dasharray: 4 4,color:#94a3b8;
+
+    subgraph PRIMARY[" 🧑‍💻 User-Facing Primary Agents "]
+        Build["fa:fa-hammer <b>Build Agent</b><br/>Full generation & execution"]:::primary
+        Plan["fa:fa-compass <b>Plan Agent</b><br/>Architectural planning & specs"]:::primary
+    end
+
+    subgraph WORKERS[" 🤖 Specialized Subagents "]
+        direction TB
+        General["fa:fa-briefcase <b>General Subagent</b><br/>Multi-step research and workflows"]:::subagent
+        Explore["fa:fa-magnifying-glass <b>Explore Subagent</b><br/>Read-only codebase search"]:::subagent
+        Scout["fa:fa-bolt <b>Scout Subagent</b><br/>High-speed targeted file lookup"]:::subagent
+    end
+
+    subgraph SYSTEM[" ⚙️ Hidden System Agents "]
+        direction TB
+        Compaction["fa:fa-compress <b>Compaction Agent</b><br/>Token trimming & summarization"]:::system
+        Title["fa:fa-pen <b>Title Agent</b><br/>Contextual session labelling"]:::system
+        Summary["fa:fa-book <b>Summary Agent</b><br/>Conversation timeline caching"]:::system
+    end
+
+    Build & Plan ==>|Spawn Delegate| General & Explore & Scout
+
+    class PRIMARY,WORKERS,SYSTEM subStyle;
+
+
+6. Subagent Execution Model
+
+
+
+Code snippet
+%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Fira Code, monospace', 'fontSize': '12px', 'darkMode': true, 'actorBkg': '#1e1b4b', 'actorBorder': '#818cf8', 'actorTextColor': '#e0e7ff', 'signalColor': '#94a3b8', 'signalTextColor': '#cbd5e1', 'noteBkgColor': '#1e293b', 'noteTextColor': '#38bdf8', 'noteBorderColor': '#0284c7'}}}%%
+sequenceDiagram
+    autonumber
+    participant Parent as 🧑‍💻 Parent Agent (Build/Plan)
+    participant SM as ⚡ Session Manager
+    participant Child as 🤖 Child Session
+    participant DB as 💾 SQLite DB
+
+    Parent->>SM: launchSubagent(agentType, model, initialContext)
+    activate SM
+    SM->>SM: createSession(parentID, agent, model)
+    SM->>+Child: Initialize isolated environment
+    deactivate SM
+
+    Child->>DB: Register initial message stream
+    loop Independent Processing
+        Child->>Child: Execute assigned tools & compute steps
+    end
+
+    alt Foreground Invocation
+        Child-->>Parent: Synchronous aggregated result payload
+    else Background Invocation
+        Child-->>Parent: Async notification (EventBus completion)
+    end
+    deactivate Child
+
+    Parent->>Parent: Incorporate result into primary context
+
+
+7. Context Compaction Flow
+
+
+
+Code snippet
+%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Fira Code, monospace', 'fontSize': '13px', 'darkMode': true, 'background': '#0f172a'}}}%%
+flowchart TB
     classDef detection fill:#1e293b,stroke:#38bdf8,stroke-width:2px,color:#f8fafc,rx:6px,ry:6px;
     classDef process fill:#312e81,stroke:#818cf8,stroke-width:2px,color:#f5f3ff,rx:6px,ry:6px;
     classDef method fill:#064e3b,stroke:#34d399,stroke-width:2px,color:#ecfdf5,rx:6px,ry:6px;
@@ -232,28 +270,27 @@ flowchart TB
 
     subgraph DETECTION[" 🔍 Detection Layer "]
         direction TB
-        D1["Token Count vs Model Limit"]:::detection
-        D2["Turn Splitting Check"]:::detection
+        D1["fa:fa-gauge Token Count vs Limit"]:::detection
+        D2["fa:fa-scissors Turn Splitting Check"]:::detection
     end
 
     subgraph PROCESS[" ⚙️ Compaction Pipeline "]
         direction TB
-        P1["Output Pruning"]:::process
-        P2["Compaction Markers"]:::process
-        P3["Durable Barrier"]:::process
+        P1["fa:fa-filter Output Pruning"]:::process
+        P2["fa:fa-bookmark Compaction Markers"]:::process
+        P3["fa:fa-shield-halved Durable Barrier"]:::process
     end
 
     subgraph METHODS[" 📦 Compaction Strategies "]
         direction TB
-        M1["Local Summary<br/><i>(SessionCompaction)</i>"]:::method
-        M2["Native Provider Compaction"]:::method
+        M1["fa:fa-file-lines Local Summary<br/><i>(SessionCompaction)</i>"]:::method
+        M2["fa:fa-server Native Provider Compaction"]:::method
     end
 
     subgraph PERSISTENCE[" 💾 State & Storage "]
         DB[("fa:fa-database SQLite DB")]:::storage
     end
 
-    %% Flow Traces
     D1 --> P1 --> P3
     D2 --> P2 --> P3
 
@@ -262,279 +299,299 @@ flowchart TB
 
     M1 & M2 -->|Persist Compressed Context| DB
 
-    %% Subgraph Styling
     class DETECTION,PROCESS,METHODS,PERSISTENCE subStyle;
-```
 
-## 8. Instruction Resolution Order
 
-```mermaid
-graph LR
-    I1[Agent/Provider<br/>System Prompt] --> I2[Built-in<br/>Context]
-    I2 --> I3[Code Mode<br/>Guidance]
-    I3 --> I4[AGENTS.md<br/>Discovery<br/>workspace→home]
-    I4 --> I5[Skill/Reference<br/>MCP Guidance]
-    I5 --> I6[Session<br/>Instructions]
+8. Instruction Resolution Order
 
-    style I1 fill:#f9f,stroke:#333
-    style I6 fill:#9cf,stroke:#333
-```
 
-## 9. Location & Service Graph
 
-```mermaid
-graph TB
-    subgraph "Location (Project Root)"
-        Loc[Location.Ref]
+Code snippet
+%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Fira Code, monospace', 'fontSize': '12px', 'darkMode': true, 'background': '#0f172a'}}}%%
+flowchart LR
+    classDef root fill:#1e1b4b,stroke:#818cf8,stroke-width:2px,color:#e0e7ff,rx:6px,ry:6px;
+    classDef step fill:#064e3b,stroke:#34d399,stroke-width:2px,color:#ecfdf5,rx:6px,ry:6px;
+    classDef priority fill:#701a75,stroke:#f472b6,stroke-width:2px,color:#fdf2f8,rx:6px,ry:6px;
+
+    I1["fa:fa-gear <b>System Prompt</b><br/>Provider & Agent Base"]:::root
+    I2["fa:fa-box <b>Built-in Context</b><br/>Runtime Metadata"]:::step
+    I3["fa:fa-code <b>Code Mode</b><br/>Execution Guidance"]:::step
+    I4["fa:fa-file-lines <b>AGENTS.md</b><br/>Workspace → Home"]:::step
+    I5["fa:fa-puzzle-piece <b>Skills & MCP</b><br/>Dynamic Tools"]:::step
+    I6["fa:fa-user-check <b>Session Instructions</b><br/><i>Highest Precedence</i>"]:::priority
+
+    I1 ==>|Pave Base| I2
+    I2 ==>|Inject| I3
+    I3 ==>|Augment| I4
+    I4 ==>|Extend| I5
+    I5 ==>|Override| I6
+
+
+9. Location & Service Graph
+
+
+
+Code snippet
+%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Fira Code, monospace', 'fontSize': '13px', 'darkMode': true, 'background': '#0f172a'}}}%%
+flowchart TB
+    classDef hub fill:#312e81,stroke:#a78bfa,stroke-width:3px,color:#f5f3ff,rx:10px,ry:10px;
+    classDef infra fill:#1e293b,stroke:#38bdf8,stroke-width:1.5px,color:#f8fafc,rx:6px,ry:6px;
+    classDef agent fill:#064e3b,stroke:#34d399,stroke-width:1.5px,color:#ecfdf5,rx:6px,ry:6px;
+    classDef ext fill:#701a75,stroke:#f472b6,stroke-width:1.5px,color:#fdf2f8,rx:6px,ry:6px;
+    classDef subStyle fill:#090d16,stroke:#334155,stroke-width:1.5px,stroke-dasharray: 4 4,color:#94a3b8;
+
+    Loc["fa:fa-folder-tree <b>Location.Ref</b><br/><i>(Project Root Workspace)</i>"]:::hub
+
+    subgraph SYSTEM_SERVICES[" ⚙️ System & Execution "]
+        FS["fa:fa-hard-drive Filesystem"]:::infra
+        VCS["fa:fa-code-branch Version Control"]:::infra
+        PT["fa:fa-terminal PTY Service"]:::infra
+        Ru["fa:fa-play Session Runner"]:::infra
     end
 
-    Loc --> FS[Filesystem]
-    Loc --> VCS[VCS]
-    Loc --> Ag[Agents]
-    Loc --> Md[Models]
-    Loc --> Pr[Providers]
-    Loc --> To[Tools]
-    Loc --> Pe[Permissions]
-    Loc --> Pl[Plugins]
-    Loc --> Mc[MCP]
-    Loc --> In[Instructions]
-    Loc --> Sk[Skills]
-    Loc --> Cm[Commands]
-    Loc --> Re[References]
-    Loc --> PT[PTY]
-    Loc --> Ru[Runner]
-
-    style Loc fill:#f9f,stroke:#333
-```
-
-## 10. HTTP API Surface (98 operations)
-
-```mermaid
-graph TB
-    subgraph "Server"
-        S1[info]
-        S2[pair]
-        S3[connect]
+    subgraph AGENT_CONFIG[" 🧠 Agent & Context Resources "]
+        Ag["fa:fa-robot Agents"]:::agent
+        Md["fa:fa-brain Models"]:::agent
+        Pr["fa:fa-cloud Providers"]:::agent
+        In["fa:fa-book Instructions"]:::agent
+        Pe["fa:fa-shield-halved Permissions"]:::agent
     end
 
-    subgraph "Location"
-        L1[get]
-        L2[reload]
+    subgraph EXTENSIONS[" 🔌 Capabilities & Tooling "]
+        To["fa:fa-toolbox Tools"]:::ext
+        Pl["fa:fa-puzzle-piece Plugins"]:::ext
+        Mc["fa:fa-server MCP Servers"]:::ext
+        Sk["fa:fa-bolt Skills"]:::ext
+        Cm["fa:fa-terminal Commands"]:::ext
+        Re["fa:fa-bookmark References"]:::ext
     end
 
-    subgraph "Agent"
-        A1[list]
-        A2[get]
+    Loc ==> SYSTEM_SERVICES
+    Loc ==> AGENT_CONFIG
+    Loc ==> EXTENSIONS
+
+    class SYSTEM_SERVICES,AGENT_CONFIG,EXTENSIONS subStyle;
+
+
+10. HTTP API Surface (98 operations)
+
+
+
+Code snippet
+%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Fira Code, monospace', 'fontSize': '12px', 'darkMode': true, 'background': '#0f172a'}}}%%
+flowchart TB
+    classDef gateway fill:#312e81,stroke:#a78bfa,stroke-width:3px,color:#f5f3ff,rx:10px,ry:10px;
+    classDef core fill:#1e1b4b,stroke:#818cf8,stroke-width:2px,color:#e0e7ff,rx:6px,ry:6px;
+    classDef ext fill:#064e3b,stroke:#34d399,stroke-width:2px,color:#ecfdf5,rx:6px,ry:6px;
+    classDef sys fill:#701a75,stroke:#f472b6,stroke-width:2px,color:#fdf2f8,rx:6px,ry:6px;
+    classDef subStyle fill:#090d16,stroke:#334155,stroke-width:1.5px,stroke-dasharray: 4 4,color:#94a3b8;
+
+    API["fa:fa-network-wired <b>OpenCode HTTP API</b><br/><i>[ 98 Registered Operations ]</i>"]:::gateway
+
+    subgraph SESSIONS[" 💬 Session Lifecycle (15 ops) "]
+        direction TB
+        S_Ops["• list, create, get, remove, update<br/>• fork, prompt, interrupt, wait<br/>• switchAgent, switchModel<br/>• compact, context, import, export"]:::core
     end
 
-    subgraph "Plugin"
-        P1[list]
-        P2[check]
-        P3[update]
+    subgraph RUNTIME[" ⚙️ System & Workspace (18 ops) "]
+        direction TB
+        R_Ops["• Server: info, pair, connect (3)<br/>• Location: get, reload (2)<br/>• Agents & Plugins: list, get, check, update (5)<br/>• Runtime: shell, pty, file, vcs (8)"]:::sys
     end
 
-    subgraph "Session"
-        SE1[list]
-        SE2[create]
-        SE3[get]
-        SE4[remove]
-        SE5[update]
-        SE6[fork]
-        SE7[prompt]
-        SE8[interrupt]
-        SE9[wait]
-        SE10[switchAgent]
-        SE11[switchModel]
-        SE12[compact]
-        SE13[context]
-        SE14[import]
-        SE15[export]
+    subgraph INTEGRATIONS[" 🔌 Extensibility & Control (34 ops) "]
+        direction TB
+        I_Ops["• Providers & Models: config, credentials (8)<br/>• Extensions: mcp, plugin, skill (9)<br/>• Knowledge: reference, command (5)<br/>• Interaction: question, form, message (6)<br/>• Pipeline: permission, generation, events (6)"]:::ext
     end
 
-    subgraph "Other"
-        O1[message]
-        O2[form]
-        O3[question]
-        O4[permission]
-        O5[file]
-        O6[vcs]
-        O7[shell]
-        O8[pty]
-        O9[model]
-        O10[provider]
-        O11[integration]
-        O12[credential]
-        O13[mcp]
-        O14[skill]
-        O15[reference]
-        O16[command]
-        O17[generation]
-        O18[event]
+    API ==>|RPC / HTTP REST| SESSIONS
+    API ==>|System Control| RUNTIME
+    API ==>|Protocol Dispatch| INTEGRATIONS
+
+    class SESSIONS,RUNTIME,INTEGRATIONS subStyle;
+
+
+11. Data Persistence: SessionProjector
+
+
+
+Code snippet
+%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Fira Code, monospace', 'fontSize': '13px', 'darkMode': true, 'background': '#0f172a'}}}%%
+flowchart TB
+    classDef memory fill:#1e1b4b,stroke:#818cf8,stroke-width:2px,color:#e0e7ff,rx:6px,ry:6px;
+    classDef projector fill:#312e81,stroke:#a78bfa,stroke-width:3px,color:#f5f3ff,rx:8px,ry:8px;
+    classDef storage fill:#701a75,stroke:#f472b6,stroke-width:2px,color:#fdf2f8,rx:4px,ry:4px;
+    classDef subStyle fill:#090d16,stroke:#334155,stroke-width:1.5px,stroke-dasharray: 4 4,color:#94a3b8;
+
+    subgraph IN_MEMORY[" ⚡ Active In-Memory State "]
+        direction TB
+        Msg["fa:fa-comment-dots Dynamic Messages"]:::memory
+        ToolCalls["fa:fa-terminal Tool Invocations"]:::memory
+        State["fa:fa-sliders Session Context & Flags"]:::memory
     end
 
-    API[HTTP API] --> S1 & S2 & S3
-    API --> L1 & L2
-    API --> A1 & A2
-    API --> P1 & P2 & P3
-    API --> SE1 & SE2 & SE3 & SE4 & SE5 & SE6 & SE7 & SE8 & SE9 & SE10 & SE11 & SE12 & SE13 & SE14 & SE15
-    API --> O1 & O2 & O3 & O4 & O5 & O6 & O7 & O8 & O9 & O10 & O11 & O12 & O13 & O14 & O15 & O16 & O17 & O18
-```
+    Proj["fa:fa-microchip-fork <b>SessionProjector</b><br/><i>(Atomic Commit Engine)</i>"]:::projector
 
-## 11. Data Persistence: SessionProjector
-
-```mermaid
-graph TB
-    subgraph "In-Memory"
-        Msg[Messages]
-        ToolCalls[Tool Calls]
-        State[Session State]
+    subgraph PERSISTENCE[" 💾 SQLite Relational Database "]
+        direction TB
+        DB[("fa:fa-table Sessions Table")]:::storage
+        DB2[("fa:fa-table Messages Table")]:::storage
+        DB3[("fa:fa-table ToolResults Table")]:::storage
+        DB4[("fa:fa-table Compactions Table")]:::storage
     end
 
-    subgraph "SessionProjector"
-        Proj[Projector]
+    Msg & ToolCalls & State ==>|Batch Events| Proj
+    Proj ==>|Synchronous Write Transaction| DB & DB2 & DB3 & DB4
+
+    class IN_MEMORY,PERSISTENCE subStyle;
+
+
+12. Tool Execution Pipeline
+
+
+
+Code snippet
+%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Fira Code, monospace', 'fontSize': '12px', 'darkMode': true, 'background': '#0f172a'}}}%%
+flowchart TB
+    classDef contract fill:#312e81,stroke:#a78bfa,stroke-width:2px,color:#f5f3ff,rx:8px,ry:8px;
+    classDef tool fill:#1e1b4b,stroke:#818cf8,stroke-width:1.5px,color:#e0e7ff,rx:4px,ry:4px;
+    classDef ext fill:#064e3b,stroke:#34d399,stroke-width:1.5px,color:#ecfdf5,rx:4px,ry:4px;
+    classDef perm fill:#701a75,stroke:#f472b6,stroke-width:1.5px,color:#fdf2f8,rx:4px,ry:4px;
+    classDef subStyle fill:#090d16,stroke:#334155,stroke-width:1.5px,stroke-dasharray: 4 4,color:#94a3b8;
+
+    Make["fa:fa-file-signature <b>Tool.make Contract</b><br/>Codecs • Execution • Projection"]:::contract
+
+    subgraph BUILTINS[" 🛠️ Built-in Capabilities "]
+        direction TB
+        T1["read"]:::tool
+        T2["glob"]:::tool
+        T3["grep"]:::tool
+        T4["edit"]:::tool
+        T5["write"]:::tool
+        T6["patch"]:::tool
+        T7["shell"]:::tool
+        T8["webfetch"]:::tool
+        T9["websearch"]:::tool
+        T10["question"]:::tool
+        T11["skill"]:::tool
+        T12["subagent"]:::tool
+        T13["execute"]:::tool
     end
 
-    subgraph "SQLite Database"
-        DB[(Sessions Table)]
-        DB2[(Messages Table)]
-        DB3[(ToolResults Table)]
-        DB4[(Compactions Table)]
+    subgraph EXTERNAL[" 🌐 External Tools "]
+        direction TB
+        M1["fa:fa-server MCP Server Tools"]:::ext
+        P1["fa:fa-puzzle-piece Plugin Tools"]:::ext
     end
 
-    Msg --> Proj
-    ToolCalls --> Proj
-    State --> Proj
-    Proj --> DB
-    Proj --> DB2
-    Proj --> DB3
-    Proj --> DB4
-
-    style Proj fill:#f9f,stroke:#333
-```
-
-## 12. Tool Execution Pipeline
-
-```mermaid
-graph TB
-    subgraph "Tool Contract"
-        Make[Tool.make<br/>Codecs + Execution + Projection]
+    subgraph PERMISSIONS[" 🛡️ Enforced Permission Actions "]
+        direction TB
+        PA1["action: read"]:::perm
+        PA2["action: edit / write"]:::perm
+        PA3["action: glob / grep"]:::perm
+        PA4["action: shell / pty"]:::perm
+        PA5["action: subagent"]:::perm
+        PA6["action: websearch / fetch"]:::perm
+        PA7["action: external_directory"]:::perm
     end
 
-    Make --> Builtins
-    Make --> MCP_Tools
-    Make --> Plugin_Tools
+    Make ==> BUILTINS
+    Make ==> EXTERNAL
 
-    subgraph "Built-in Tools"
-        T1[read]
-        T2[glob]
-        T3[grep]
-        T4[edit]
-        T5[write]
-        T6[patch]
-        T7[shell]
-        T8[webfetch]
-        T9[websearch]
-        T10[question]
-        T11[skill]
-        T12[subagent]
-        T13[execute]
+    T1 & T2 & T3 -.-> PA1
+    T4 & T5 & T6 -.-> PA2
+    T2 & T3 -.-> PA3
+    T7 & T13 -.-> PA4
+    T12 -.-> PA5
+    T8 & T9 -.-> PA6
+    T7 -.-> PA7
+
+    class BUILTINS,EXTERNAL,PERMISSIONS subStyle;
+
+
+13. Worktree Management
+
+
+
+Code snippet
+%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Fira Code, monospace', 'fontSize': '13px', 'darkMode': true, 'background': '#0f172a'}}}%%
+flowchart TB
+    classDef loc fill:#1e1b4b,stroke:#818cf8,stroke-width:2px,color:#e0e7ff,rx:8px,ry:8px;
+    classDef git fill:#064e3b,stroke:#34d399,stroke-width:1.5px,color:#ecfdf5,rx:4px,ry:4px;
+    classDef custom fill:#701a75,stroke:#f472b6,stroke-width:1.5px,color:#fdf2f8,rx:4px,ry:4px;
+    classDef runtime fill:#1e293b,stroke:#38bdf8,stroke-width:2px,color:#f8fafc,rx:6px,ry:6px;
+    classDef subStyle fill:#090d16,stroke:#334155,stroke-width:1.5px,stroke-dasharray: 4 4,color:#94a3b8;
+
+    Location["fa:fa-folder-tree <b>Location Core</b>"]:::loc
+
+    subgraph STRATEGIES[" 🌿 Worktree Strategies "]
+        subgraph GIT[" Git Native Strategy (Default) "]
+            direction TB
+            WT1["fa:fa-plus worktree create"]:::git
+            WT2["fa:fa-list worktree list"]:::git
+            WT3["fa:fa-trash worktree remove"]:::git
+        end
+        subgraph PLUGINS[" Custom Extensions "]
+            PS1["fa:fa-puzzle-piece Plugin Sandbox Strategy"]:::custom
+        end
     end
 
-    subgraph "External Tools"
-        M1[MCP Tools]
-        P1[Plugin Tools]
+    subgraph WORKSPACE[" 📂 Execution Workspace "]
+        direction TB
+        Dir["fa:fa-folder-open Isolated Worktree Dir"]:::runtime
+        Session["fa:fa-terminal Session Working Dir"]:::runtime
+        Runner["fa:fa-play Session Runner Context"]:::runtime
     end
 
-    Builtins --> T1 & T2 & T3 & T4 & T5 & T6 & T7 & T8 & T9 & T10 & T11 & T12 & T13
-    MCP_Tools --> M1
-    Plugin_Tools --> P1
+    Location ==> GIT & PLUGINS
+    WT1 & PS1 ==> Dir --> Session --> Runner
 
-    subgraph "Permission Actions"
-        PA1[read]
-        PA2[edit]
-        PA3[glob]
-        PA4[grep]
-        PA5[shell]
-        PA6[subagent]
-        PA7[skill]
-        PA8[question]
-        PA9[webfetch]
-        PA10[websearch]
-        PA11[external_directory]
-        PA12[execute]
+    class STRATEGIES,GIT,PLUGINS,WORKSPACE subStyle;
+
+
+14. Event Bus Architecture
+
+
+
+Code snippet
+%%{init: {'theme': 'base', 'themeVariables': { 'fontFamily': 'Fira Code, monospace', 'fontSize': '13px', 'darkMode': true, 'background': '#0f172a'}}}%%
+flowchart TB
+    classDef source fill:#1e1b4b,stroke:#818cf8,stroke-width:2px,color:#e0e7ff,rx:6px,ry:6px;
+    classDef bus fill:#312e81,stroke:#a78bfa,stroke-width:3px,color:#f5f3ff,rx:10px,ry:10px;
+    classDef consumer fill:#064e3b,stroke:#34d399,stroke-width:2px,color:#ecfdf5,rx:6px,ry:6px;
+    classDef subStyle fill:#090d16,stroke:#334155,stroke-width:1.5px,stroke-dasharray: 4 4,color:#94a3b8;
+
+    subgraph SOURCES[" 📤 Event Producers "]
+        direction TB
+        S1["fa:fa-table SessionProjector"]:::source
+        S2["fa:fa-play SessionRunner"]:::source
+        S3["fa:fa-puzzle-piece PluginManager"]:::source
+        S4["fa:fa-terminal ToolExecution"]:::source
+        S5["fa:fa-brain ModelProvider"]:::source
     end
 
-    T1 -.-> PA1
-    T4 -.-> PA2
-    T2 -.-> PA3
-    T3 -.-> PA4
-    T7 -.-> PA5
-    T12 -.-> PA6
-    T11 -.-> PA7
-    T10 -.-> PA8
-    T8 -.-> PA9
-    T9 -.-> PA10
-    T7 -.-> PA11
-    T13 -.-> PA12
-```
+    Bus["fa:fa-bolt-lightning <b>EventV2 Global Message Bus</b><br/><i>(Publish / Subscribe Core)</i>"]:::bus
 
-## 13. Worktree Management
-
-```mermaid
-graph TB
-    subgraph "Git Strategy (Default)"
-        WT1[worktree create]
-        WT2[worktree list]
-        WT3[worktree remove]
+    subgraph CONSUMERS[" 📥 Event Consumers "]
+        direction TB
+        C1[("fa:fa-database SQLite Storage")]:::consumer
+        C2["fa:fa-desktop UI Clients"]:::consumer
+        C3["fa:fa-plug Plugin Hooks"]:::consumer
+        C4["fa:fa-file-lines Audit Log Output"]:::consumer
     end
 
-    subgraph "Plugin Strategies"
-        PS1[Custom strategy]
-    end
+    S1 & S2 & S3 & S4 & S5 ==>|Dispatch Events| Bus
+    Bus ==>|Broadcast Streams| C1 & C2 & C3 & C4
 
-    Location --> WT1 & WT2 & WT3
-    Location --> PS1
+    class SOURCES,CONSUMERS subStyle;
 
-    WT1 --> Dir[Worktree Directory]
-    Dir --> Session[Session Working Dir]
-    Session --> Runner[SessionRunner]
-```
 
-## 14. Event Bus Architecture
+Generated from OpenCode V2 source code and documentation analysis.
 
-```mermaid
-graph TB
-    subgraph "EventV2"
-        Bus[Global Event Bus]
-    end
 
-    subgraph "Event Sources"
-        S1[SessionProjector]
-        S2[SessionRunner]
-        S3[PluginManager]
-        S4[ToolExecution]
-        S5[ModelProvider]
-    end
 
-    subgraph "Event Consumers"
-        C1[SQLite Storage]
-        C2[UI Clients]
-        C3[Plugin Hooks]
-        C4[Logging]
-    end
+<ElicitationsGroup message="Would you like to customize these diagrams further?">
+  <Elicitation label="Switch from dark mode to light mode" query="Convert all the Mermaid diagrams in this document from the dark slate theme to a clean GitHub light theme."/>
+  <Elicitation label="Export architecture overview as interactive HTML" query="Build an interactive standalone HTML/SVG preview showing the System Architecture with clickable layers and collapsible details."/>
+  <Elicitation label="Detail HTTP API endpoints in reference tables" query="Generate markdown reference tables breaking down the 98 HTTP API operations into methods, paths, and payload schemas."/>
+</ElicitationsGroup>
 
-    S1 --> Bus
-    S2 --> Bus
-    S3 --> Bus
-    S4 --> Bus
-    S5 --> Bus
-
-    Bus --> C1
-    Bus --> C2
-    Bus --> C3
-    Bus --> C4
-```
-
----
-
-*Generated from OpenCode V2 source code and documentation analysis.*
